@@ -6,12 +6,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Entity
+@Table(name= "members")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -19,24 +22,36 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(of = "id")
 public class Member implements UserDetails {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id", updatable = false, unique = true, nullable = false)
     private Long id;
 
     @Column(nullable = false)
-    private String username;
+    private String loginId;
 
     @Column(nullable = false)
     private String password;
 
-    private String nickname;
+    @Column(nullable = false)
+    private String name;
 
-    private String address; // 도로명 주소
+    @Column(nullable = false)
+    private String nickName;
 
+    private LocalDate birth;
+
+    @Column(nullable = false)
     private String phone;
 
-    private String profileImg;
+    @Column(nullable = false)
+    private String email;
 
+    @Column(nullable = false)
+    private String address; // 도로명 주소
+
+    private String detailAddress;
+
+    @Column(nullable = false)
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
     private List<String> roles = new ArrayList<>();
@@ -45,6 +60,23 @@ public class Member implements UserDetails {
         return this.roles.stream()
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
+    }
+
+    @Column(nullable = false)
+    private String status;
+
+    private LocalDateTime registrationDate;
+
+    private LocalDateTime lastModified;
+
+    @Override
+    public String getUsername() {
+        return loginId;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 
     @Override
