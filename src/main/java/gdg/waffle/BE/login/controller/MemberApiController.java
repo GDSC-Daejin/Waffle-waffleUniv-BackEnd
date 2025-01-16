@@ -19,7 +19,6 @@ public class MemberApiController {
 
     @PostMapping("/sign-in")
     public JwtToken signIn(@RequestBody SignInDto signInDto) {
-        log.info("signIn 컨트롤러");
         String loginId = signInDto.getLoginId();
         String password = signInDto.getPassword();
 
