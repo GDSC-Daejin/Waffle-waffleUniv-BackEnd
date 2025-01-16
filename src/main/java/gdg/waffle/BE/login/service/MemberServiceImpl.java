@@ -32,6 +32,7 @@ public class MemberServiceImpl implements MemberService{
     @Transactional
     @Override
     public JwtToken signIn(SignInDto signInDto) {
+        log.info("signIn 시작");
         String loginId = signInDto.getLoginId();
         String password = signInDto.getPassword();
         // 1. username + password 를 기반으로 Authentication 객체 생성
@@ -43,6 +44,7 @@ public class MemberServiceImpl implements MemberService{
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
+        log.info("signIn 끝");
         return jwtTokenProvider.generateToken(authentication);
 
     }

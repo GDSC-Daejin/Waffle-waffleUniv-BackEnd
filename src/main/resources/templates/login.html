@@ -6,15 +6,46 @@
     <title>Login and Signup</title>
 </head>
 <body>
-<form action="/members/sign-in" method="POST">
-    <label for="username">아이디</label><br>
-    <input type="text" id="username" name="username" placeholder="아이디 입력" required><br><br>
+<form id="loginForm">
+    <label for="loginId">아이디</label><br>
+    <input type="text" id="loginId" name="loginId" placeholder="아이디 입력" required><br><br>
 
     <label for="password">비밀번호</label><br>
     <input type="password" id="password" name="password" placeholder="비밀번호 입력" required><br><br>
 
-    <button type="submit">로그인</button>
+    <button type="button" onclick="login()">로그인</button>
     <button type="button" onclick="window.location.href='/members/sign-up'">회원가입</button>
 </form>
+
+<script>
+    async function login() {
+        const formData = {
+            loginId: document.getElementById("loginId").value,
+            password: document.getElementById("password").value,
+        };
+
+        try {
+            const response = await fetch('/members/sign-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                const jwtToken = await response.json(); // 서버에서 JwtToken 객체를 JSON으로 받아옴
+                localStorage.setItem('accessToken', jwtToken.accessToken); // accessToken 저장
+                localStorage.setItem('refreshToken', jwtToken.refreshToken); // refreshToken 저장
+                alert("로그인 성공!(테스트용 알림)");
+                window.location.href = "/members/home"; // 홈 화면으로 이동
+            } else {
+                const errorText = await response.text();
+                alert("로그인 실패: " + errorText);
+            }
+        } catch (error) {
+            console.error("오류 발생:", error);
+            alert("서버와의 통신 중 오류가 발생했습니다.");
+        }
+    }
+</script>
 </body>
 </html>

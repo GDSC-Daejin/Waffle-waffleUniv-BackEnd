@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+</head>
+<body>
+<h1>홈 화면</h1>
+<div id="buttonContainer">
+  <button id="loginButton" onclick="redirectToLogin()">로그인</button>
+  <button id="logoutButton" onclick="logout()" style="display: none;">로그아웃</button>
+</div>
+
+<script>
+  // 로그인 버튼 클릭 시 로그인 페이지로 이동
+  function redirectToLogin() {
+    window.location.href = "/members/login";
+  }
+
+  // 로그아웃 처리
+  function logout() {
+    localStorage.removeItem('accessToken'); // 토큰 삭제
+    alert("로그아웃되었습니다.");
+    window.location.reload(); // 페이지 새로고침
+  }
+
+  // 로그인 상태 확인 및 버튼 표시 처리
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('accessToken'); // JWT 토큰 확인
+    const loginButton = document.getElementById('loginButton');
+    const logoutButton = document.getElementById('logoutButton');
+
+    if (token) {
+      // 로그인 상태: 로그인 버튼 숨기고 로그아웃 버튼 표시
+      loginButton.style.display = "none";
+      logoutButton.style.display = "block";
+    } else {
+      // 비로그인 상태: 로그인 버튼 표시하고 로그아웃 버튼 숨김
+      loginButton.style.display = "block";
+      logoutButton.style.display = "none";
+    }
+  });
+</script>
+</body>
+</html>

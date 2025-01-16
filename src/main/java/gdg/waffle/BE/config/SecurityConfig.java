@@ -2,9 +2,12 @@ package gdg.waffle.BE.config;
 
 import gdg.waffle.BE.common.jwt.JwtAuthenticationFilter;
 import gdg.waffle.BE.common.jwt.JwtTokenProvider;
+import gdg.waffle.BE.login.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests()
                 // 해당 API에 대해서는 모든 요청을 허가
                 .requestMatchers("/members/login").permitAll() // 로그인 페이지 이동
+                .requestMatchers("/members/home").permitAll() // 홈 화면 이동
                 .requestMatchers("/members/sign-up").permitAll() // 회원가입
                 .requestMatchers("/members/sign-in").permitAll() // 로그인
                 // USER 권한이 있어야 요청할 수 있음

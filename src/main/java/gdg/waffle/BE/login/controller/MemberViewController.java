@@ -22,6 +22,11 @@ public class MemberViewController {
     public String signUpPage() {
         return "sign-up";
     }
+
+    @GetMapping("/home") // 홈화면 이동
+    public String homePage() {
+        return "home";
+    }
 }
 
 
