@@ -19,8 +19,13 @@ public class MemberApiController {
 
     @PostMapping("/sign-in")
     public JwtToken signIn(@RequestBody SignInDto signInDto) {
+        log.info("signIn 컨트롤러");
         String loginId = signInDto.getLoginId();
         String password = signInDto.getPassword();
+
+        log.info("로그인 아이디 : {}", loginId);
+        log.info("로그인 비밀번호 : {}", password);
+
         JwtToken jwtToken = memberService.signIn(signInDto);
         log.info("request username = {}, password = {}", loginId, password);
         log.info("jwtToken accessToken = {}, refreshToken = {}", jwtToken.getAccessToken(), jwtToken.getRefreshToken());
@@ -29,7 +34,6 @@ public class MemberApiController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<String> signUp(@RequestBody SignUpDto signUpDto) {
-        log.info("컨트롤러");
         try {
             memberService.signUp(signUpDto);
             return ResponseEntity.ok("회원가입이 완료되었습니다.");
