@@ -20,26 +20,30 @@
 
   // 로그아웃 처리
   function logout() {
-    localStorage.removeItem('accessToken'); // 토큰 삭제
+    localStorage.removeItem('accessToken'); // JWT 삭제
+    localStorage.removeItem('refreshToken');
     alert("로그아웃되었습니다.");
-    window.location.reload(); // 페이지 새로고침
+    updateUI(); // UI 업데이트
   }
 
   // 로그인 상태 확인 및 버튼 표시 처리
-  document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('accessToken'); // JWT 토큰 확인
-    const loginButton = document.getElementById('loginButton');
-    const logoutButton = document.getElementById('logoutButton');
+  function updateUI() {
+    const token = localStorage.getItem('accessToken');
+    document.getElementById('loginButton').style.display = token ? "none" : "block";
+    document.getElementById('logoutButton').style.display = token ? "block" : "none";
+  }
 
-    if (token) {
-      // 로그인 상태: 로그인 버튼 숨기고 로그아웃 버튼 표시
-      loginButton.style.display = "none";
-      logoutButton.style.display = "block";
-    } else {
-      // 비로그인 상태: 로그인 버튼 표시하고 로그아웃 버튼 숨김
-      loginButton.style.display = "block";
-      logoutButton.style.display = "none";
+  // 페이지 로드 시 로그인 상태 확인
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const jwtToken = urlParams.get("jwtToken");
+
+    if (jwtToken) {
+      localStorage.setItem('accessToken', jwtToken); // JWT 저장
+      history.replaceState({}, document.title, window.location.pathname); // URL 정리
     }
+
+    updateUI();
   });
 </script>
 </body>

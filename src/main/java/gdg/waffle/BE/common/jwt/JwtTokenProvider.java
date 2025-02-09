@@ -3,6 +3,7 @@ package gdg.waffle.BE.common.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -17,6 +18,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,7 +32,7 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // Member 정보를 가지고 AccessToken, RefreshToken을 생성하는 메서드
+    // 일반 로그인 JWT 생성 - Member 정보를 가지고 AccessToken, RefreshToken을 생성하는 메서드
     public JwtToken generateToken(Authentication authentication) {
         // 권한 가져오기
         String authorities = authentication.getAuthorities().stream()
@@ -40,7 +42,7 @@ public class JwtTokenProvider {
         long now = (new Date()).getTime();
 
         // Access Token 생성
-        Date accessTokenExpiresIn = new Date(now + 86400000);
+        Date accessTokenExpiresIn = new Date(now + 3600000); // 유효기간 1시간 부여
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
                 .claim("auth", authorities)
@@ -50,7 +52,7 @@ public class JwtTokenProvider {
 
         // Refresh Token 생성
         String refreshToken = Jwts.builder()
-                .setExpiration(new Date(now + 86400000))
+                .setExpiration(new Date(now + 86400000)) // 유효기간 24시간 부여
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
@@ -61,7 +63,36 @@ public class JwtTokenProvider {
                 .build();
     }
 
-    // Jwt 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
+    // 소셜 로그인 전용 JWT 생성
+    public JwtToken generateTokenForSocialUser(String email, String authority) {
+        long now = (new Date()).getTime();
+        Date accessTokenExpiresIn = new Date(now + 3600000); // 1시간 유효
+        String accessToken = Jwts.builder()
+                .setSubject(email)
+                .claim("auth", authority)
+                .setExpiration(accessTokenExpiresIn)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+        String refreshToken = Jwts.builder()
+                .setExpiration(new Date(now + 86400000)) // 24시간 유효
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+        return JwtToken.builder()
+                .grantType("Bearer")
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    // JWT 생성 권한 부여
+    // JWT 생성 권한 부여
+    public Collection<? extends GrantedAuthority> createAuthorities(String role) {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
+    }
+
+    // Jwt 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메소드
     public Authentication getAuthentication(String accessToken) {
         // Jwt 토큰 복호화
         Claims claims = parseClaims(accessToken);
@@ -101,6 +132,17 @@ public class JwtTokenProvider {
         return false;
     }
 
+    // 클라이언트 요청 헤더에서 JWT를 추출하는 메서드 추가
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        // "Bearer "로 시작하는 경우에만 JWT 토큰 추출
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // "Bearer " 제거 후 JWT 반환
+        }
+
+        return null; // JWT가 없으면 null 반환
+    }
 
     // accessToken
     private Claims parseClaims(String accessToken) {

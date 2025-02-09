@@ -14,3 +14,8 @@ spring:
       ddl-auto: update
   jwt:
     secret: 64461f01e1af406da538b9c48d801ce59142452199ff112fb5404c8e7e98e3ff
+
+google:
+  client-id: "281963831825-53kidtc5diijt9hqatvjng51jocdb7hm.apps.googleusercontent.com"
+  client-secret: "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"
+  redirect-uri: "http://localhost:8080/auth/google/callback"
