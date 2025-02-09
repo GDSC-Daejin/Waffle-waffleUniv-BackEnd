@@ -48,6 +48,9 @@ dependencies {
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    // 구글 소셜로그인
+    implementation 'com.google.firebase:firebase-admin:9.1.1'
+
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
