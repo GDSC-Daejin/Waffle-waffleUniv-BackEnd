@@ -41,6 +41,13 @@ dependencies {
     // 구글 소셜로그인
     implementation 'com.google.firebase:firebase-admin:9.1.1'
 
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+//    implementation 'io.springfox:springfox-swagger-ui:2.9.2'
+//    implementation 'io.springfox:springfox-swagger2:2.0.2'
+//    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+
+
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

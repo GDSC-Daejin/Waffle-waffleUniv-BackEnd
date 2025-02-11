@@ -50,6 +50,12 @@ public class SecurityConfig {
                 .requestMatchers("/auth/google/callback").permitAll() // 소셜 로그인
                 .requestMatchers(HttpMethod.POST, "/users").permitAll() // 회원가입 요청
                 .requestMatchers("/resources/**").permitAll() // 정적 리소스
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/webjars/**",
+                        "/custom-api-docs/**"
+                ).permitAll()  // Swagger URL 허용
                 // 인증된 사용자만 접근 가능한 요청 설정
                 .anyRequest().authenticated()
                 .and()

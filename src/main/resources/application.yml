@@ -19,3 +19,20 @@ google:
   client-id: "281963831825-53kidtc5diijt9hqatvjng51jocdb7hm.apps.googleusercontent.com"
   client-secret: "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"
   redirect-uri: "http://localhost:8080/auth/google/callback"
+
+springdoc:
+  api-docs:
+    path: /custom-api-docs
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /swagger-ui-custom.html
+    enabled: true
+    groups-order: ASC
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+    cache:
+      disabled: true
+    model-and-view-allowed: true
