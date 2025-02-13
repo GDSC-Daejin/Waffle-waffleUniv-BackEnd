@@ -44,18 +44,16 @@ public class SecurityConfig {
                 .requestMatchers("/members/login").permitAll() // 로그인 페이지 이동
                 .requestMatchers("/members/home").permitAll() // 홈 화면 이동
                 .requestMatchers("/members/sign-up").permitAll() // 회원가입
+                .requestMatchers("/members/check-id").permitAll() // 아이디 중복 확인
                 .requestMatchers("/members/sign-in").permitAll() // 로그인
                 .requestMatchers("/members/social-sign-in").permitAll() // 소셜 로그인
                 .requestMatchers("/auth/google").permitAll() // 소셜 로그인
                 .requestMatchers("/auth/google/callback").permitAll() // 소셜 로그인
                 .requestMatchers(HttpMethod.POST, "/users").permitAll() // 회원가입 요청
+                .requestMatchers("/swagger-ui/**","/v3/api-docs/**","/webjars/**","/custom-api-docs/**").permitAll()  // Swagger URL 허용
                 .requestMatchers("/resources/**").permitAll() // 정적 리소스
-                .requestMatchers(
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/webjars/**",
-                        "/custom-api-docs/**"
-                ).permitAll()  // Swagger URL 허용
+
+
                 // 인증된 사용자만 접근 가능한 요청 설정
                 .anyRequest().authenticated()
                 .and()

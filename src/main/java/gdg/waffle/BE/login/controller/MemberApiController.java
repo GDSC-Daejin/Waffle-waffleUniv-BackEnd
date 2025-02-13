@@ -30,9 +30,13 @@ import java.util.List;
 @RequestMapping("/members")
 public class MemberApiController {
     private final MemberService memberService;
-    private final FirebaseAuth firebaseAuth;
-    private final MemberRepository memberRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+
+    // 아이디 중복 확인
+    @GetMapping("/check-id")
+    public ResponseEntity<String> checkId(@RequestParam String Id) {
+        memberService.checkId(Id);
+        return ResponseEntity.ok("사용 가능한 아이디입니다.");
+    }
 
     // 회원가입
     @PostMapping("/sign-up")
@@ -66,47 +70,4 @@ public class MemberApiController {
         return jwtToken;
     }
 
-    // 소셜 로그인
-//    @PostMapping("/social-login")
-//    @Operation(summary = "소셜 유저 로그인", description = "소셜 유저(구글)의 로그인을 진행합니다.")
-//    public ResponseEntity<?> socialLogin(@RequestHeader("Authorization") String authorizationHeader) {
-//        if (authorizationHeader == null || !authorizationHeader.startsWith("Firebase ")) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authorization header");
-//        }
-//
-//        String idToken = authorizationHeader.substring(9);
-//
-//        try {
-//            FirebaseToken decodedToken = firebaseAuth.verifyIdToken(idToken);
-//            String email = decodedToken.getEmail();
-//            String name = decodedToken.getName();
-//            String phone = (String) decodedToken.getClaims().get("phone_number");
-//            String address = (String) decodedToken.getClaims().get("address");
-//
-//            var member = memberRepository.findByEmail(email).orElseGet(() ->
-//                    memberRepository.save(Member.builder()
-//                            .email(email)
-//                            .name(name)
-//                            .phone(phone)
-//                            .address(address)
-//                            .isSocialUser(true)
-//                            .role(Member.Role.USER)
-//                            .status(Member.Status.ACTIVE)
-//                            .registrationDate(LocalDateTime.now())
-//                            .lastLoginAt(LocalDateTime.now())
-//                            .build())
-//            );
-//
-//            // JWT 생성 (소셜 로그인 전용 메서드 사용)
-//            JwtToken jwtToken = jwtTokenProvider.generateTokenForSocialUser(
-//                    member.getEmail(),
-//                    "ROLE_" + member.getRole().name()
-//            );
-//
-//            return ResponseEntity.ok(jwtToken);
-//
-//        } catch (FirebaseAuthException e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 Firebase ID 토큰");
-//        }
-//    }
 }
