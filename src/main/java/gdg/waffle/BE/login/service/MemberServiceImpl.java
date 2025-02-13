@@ -72,10 +72,7 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     @Override
     public void signUp(SignUpDto signUpDto) {
-        if (memberRepository.existsByLoginId(signUpDto.getLoginId())) {
-            throw new IllegalArgumentException("이미 사용 중인 ID 입니다.");
-        }
-
+        // 이메일 중복확인
         if (memberRepository.findByEmail(signUpDto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
@@ -83,5 +80,14 @@ public class MemberServiceImpl implements MemberService {
         // Password 암호화
         String encodedPassword = passwordEncoder.encode(signUpDto.getPassword());
         memberRepository.save(signUpDto.toEntity(encodedPassword));
+    }
+
+    // 아이디 중복 확인
+    @Transactional
+    @Override
+    public void checkId(String Id) {
+        if (memberRepository.existsByLoginId(Id)) {
+            throw new IllegalArgumentException("이미 사용 중인 ID 입니다.");
+        }
     }
 }
