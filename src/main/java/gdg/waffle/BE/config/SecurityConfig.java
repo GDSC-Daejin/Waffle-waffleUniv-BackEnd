@@ -3,6 +3,7 @@ package gdg.waffle.BE.config;
 import gdg.waffle.BE.common.jwt.JwtTokenProvider;
 import gdg.waffle.BE.login.repository.MemberRepository;
 import gdg.waffle.BE.login.service.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.context.annotation.Bean;
@@ -22,13 +23,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.http.HttpStatus;
 
+import java.io.IOException;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsService userDetailsService; // Firebase 인증 관련
-    private final FirebaseAuth firebaseAuth;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -52,22 +52,23 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/users").permitAll() // 회원가입 요청
                 .requestMatchers("/swagger-ui/**","/v3/api-docs/**","/webjars/**","/custom-api-docs/**").permitAll()  // Swagger URL 허용
                 .requestMatchers("/resources/**").permitAll() // 정적 리소스
-
-
                 // 인증된 사용자만 접근 가능한 요청 설정
                 .anyRequest().authenticated()
                 .and()
                 // 인증 실패 시 401 반환
-                .exceptionHandling()
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                .and().build();
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            try {
+                                response.getWriter().write("권한이 없습니다.");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        })
+                )
+                .build();
     }
-
-//    @Bean
-//    public passwordEncoder passwordEncoder() {
-//        // BCrypt Encoder 사용
-//        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-//    }
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {

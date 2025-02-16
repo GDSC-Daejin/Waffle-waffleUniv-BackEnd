@@ -15,6 +15,6 @@ public interface MemberService {
      */
     JwtToken signIn(SignInDto signInDto);
     void signUp(SignUpDto signUpDto);
-    void checkId(String Id);
+    void checkId(String loginId);
 }
 
