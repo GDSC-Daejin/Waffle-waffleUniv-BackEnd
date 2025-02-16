@@ -160,13 +160,13 @@
         body: JSON.stringify(formData),
       });
 
-      const message = await response.text(); // 서버에서 전달된 메시지
+      const data = await response.json(); // 서버에서 전달된 메시지
 
       if (response.ok) {
-        alert(message); // 성공 메시지 표시
+        alert(data.message); // 성공 메시지 표시
         window.location.href = "/members/login"; // 로그인 화면 URL로 이동
       } else {
-        alert(message); // 실패 또는 에러 메시지 표시
+        alert(data.message); // 실패 또는 에러 메시지 표시
       }
     } catch (error) {
       console.error("오류 발생:", error);

@@ -34,19 +34,15 @@ public class MemberServiceImpl implements MemberService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder; // 올바른 passwordEncoder 사용
 
-//    @Transactional
+    @Transactional
     @Override
     public JwtToken signIn(SignInDto signInDto) {
         String loginId = signInDto.getLoginId();
         String password = signInDto.getPassword();
 
-        log.info("로그인 ID 비번 {}, {}", loginId, password );
-
         // ✅ ID 기반으로 회원 정보 조회
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new IllegalArgumentException("아이디가 일치하지 않습니다."));
-
-        log.info("member {}", member.getPassword());
 
         // ✅ 비밀번호 검증
         if (!passwordEncoder.matches(password, member.getPassword())) {
@@ -56,12 +52,10 @@ public class MemberServiceImpl implements MemberService {
         // 1. username + password 를 기반으로 Authentication 객체 생성
         // 이때 authentication 은 인증 여부를 확인하는 authenticated 값이 false
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginId, password);
-        log.info("authenticationToken: {}", authenticationToken);
 
         // 2. 실제 검증. authenticate() 메서드를 통해 요청된 Member 에 대한 검증 진행
         // authenticate 메서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드 실행
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
-        log.info("authentication: {}", authentication);
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
         return jwtTokenProvider.generateToken(authentication);
@@ -85,8 +79,8 @@ public class MemberServiceImpl implements MemberService {
     // 아이디 중복 확인
     @Transactional
     @Override
-    public void checkId(String Id) {
-        if (memberRepository.existsByLoginId(Id)) {
+    public void checkId(String loginId) {
+        if (memberRepository.existsByLoginId(loginId)) {
             throw new IllegalArgumentException("이미 사용 중인 ID 입니다.");
         }
     }
