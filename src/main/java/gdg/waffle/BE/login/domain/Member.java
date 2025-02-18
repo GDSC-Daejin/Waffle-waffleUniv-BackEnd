@@ -67,10 +67,12 @@ public class Member implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private Status status; // 유저 상태 (ACTIVE, BANNED, DELETED)
-
+    private Status status; // 유저 상태
     public enum Status {
-        ACTIVE, BANNED, DELETED
+        ACTIVE, // 활성화
+        DORMANT, // 휴면
+        BANNED, // 정지
+        DELETED // 탈퇴
     }
 
     @Column(nullable = false)
