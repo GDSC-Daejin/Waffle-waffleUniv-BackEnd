@@ -24,19 +24,18 @@
 <div>
     <h3>소셜 로그인</h3>
     <button id="googleSignInButton" onclick="redirectToSocialLogin()">Sign in with Google</button>
-    <!--  <button id="socialLoginButton" >구글 로그인</button>-->
-
 </div>
 
 <script>
     // Firebase 설정
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyD435k195AzgG1OTZ1xnEt-31gsmqY7rBk",
+        authDomain: "waffle-univ.firebaseapp.com",
+        projectId: "waffle-univ",
+        storageBucket: "waffle-univ.firebasestorage.app",
+        messagingSenderId: "281963831825",
+        appId: "1:281963831825:web:db1f1bddd2b840520787b0",
+        measurementId: "G-N83W2CXQ5J"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -48,25 +47,20 @@
         };
 
         try {
-            const response = await fetch('/members/sign-in', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+            const response = await fetch("/members/sign-in", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
             });
 
+            const message = await response.text();
+            alert(message);
+
             if (response.ok) {
-                const jwtToken = await response.json();
-                localStorage.setItem('accessToken', jwtToken.accessToken);
-                localStorage.setItem('refreshToken', jwtToken.refreshToken);
-                alert("로그인 성공!(테스트용 알림)");
                 window.location.href = "/members/home";
-            } else {
-                const errorText = await response.json();
-                alert("로그인 실패: " + errorText.message);
             }
         } catch (error) {
-            console.error("오류 발생:", error);
-            alert("서버와의 통신 중 오류가 발생했습니다.");
+            alert("서버 오류가 발생했습니다.");
         }
     }
 

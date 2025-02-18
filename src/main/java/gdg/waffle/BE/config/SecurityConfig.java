@@ -2,6 +2,7 @@ package gdg.waffle.BE.config;
 
 import gdg.waffle.BE.common.jwt.JwtTokenProvider;
 import gdg.waffle.BE.login.repository.MemberRepository;
+import gdg.waffle.BE.login.service.CustomUserDetails;
 import gdg.waffle.BE.login.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +13,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,19 +44,19 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests()
                 // 공개 API 설정
-                .requestMatchers("/members/login").permitAll() // 로그인 페이지 이동
-                .requestMatchers("/members/home").permitAll() // 홈 화면 이동
-                .requestMatchers("/members/sign-up").permitAll() // 회원가입
-                .requestMatchers("/members/check-id").permitAll() // 아이디 중복 확인
-                .requestMatchers("/members/sign-in").permitAll() // 로그인
-                .requestMatchers("/members/social-sign-in").permitAll() // 소셜 로그인
-                .requestMatchers("/auth/google").permitAll() // 소셜 로그인
-                .requestMatchers("/auth/google/callback").permitAll() // 소셜 로그인
+                .requestMatchers("/members/login", "/members/home", "/members/sign-up", "/members/check-id",
+                        "/members/sign-in", "/members/social-sign-in", "/auth/google", "/auth/google/callback",
+                        "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/custom-api-docs/**", "/resources/**")
+                .permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll() // 회원가입 요청
-                .requestMatchers("/swagger-ui/**","/v3/api-docs/**","/webjars/**","/custom-api-docs/**").permitAll()  // Swagger URL 허용
-                .requestMatchers("/resources/**").permitAll() // 정적 리소스
-                // 인증된 사용자만 접근 가능한 요청 설정
-                .anyRequest().authenticated()
+                // 상태가 ACTIVE인 사용자만 모든 요청 가능하도록 추가
+                .anyRequest().access((authentication, request) -> {
+                    Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                    if (principal instanceof CustomUserDetails userDetails) {
+                        return new AuthorizationDecision(userDetails.isActive()); // 유저가 ACTIVE 상태인지 확인
+                    }
+                    return new AuthorizationDecision(false); // 나머진 모두 false로 접근 제한
+                })
                 .and()
                 // 인증 실패 시 401 반환
                 .exceptionHandling(ex -> ex

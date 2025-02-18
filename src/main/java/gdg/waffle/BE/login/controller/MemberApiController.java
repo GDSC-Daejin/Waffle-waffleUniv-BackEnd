@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Tag(name = "MemberApiController", description = "유저 관련 API")
@@ -43,29 +44,14 @@ public class MemberApiController {
     @PostMapping("/sign-up")
     @Operation(summary = "유저 회원가입", description = "유저 정보를 입력받아 회원가입을 진행합니다.")
     public ResponseEntity<String> signUp(@RequestBody @Validated(ValidationSequence.class) SignUpDto signUpDto) {
-        try {
-            memberService.signUp(signUpDto);
-            return ResponseEntity.ok("회원가입이 완료되었습니다.");
-        } catch (IllegalArgumentException e) {
-            log.error("회원가입 실패: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("회원가입 실패: " + e.getMessage());
-        } catch (Exception e) {
-            log.error("서버 오류: {}", e.getMessage());
-            return ResponseEntity.status(500).body("서버 오류로 인해 회원가입에 실패했습니다.");
-        }
+        memberService.signUp(signUpDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 완료되었습니다.");
     }
 
     // 일반 로그인
     @PostMapping("/sign-in")
     @Operation(summary = "일반 유저 로그인", description = "일반 유저의 로그인을 진행합니다.")
-    public JwtToken signIn(@RequestBody @Validated(ValidationSequence.class) SignInDto signInDto) {
-        String loginId = signInDto.getLoginId();
-        String password = signInDto.getPassword();
-
-        JwtToken jwtToken = memberService.signIn(signInDto);
-        log.info("request username = {}, password = {}", loginId, password);
-        log.info("jwtToken accessToken = {}, refreshToken = {}", jwtToken.getAccessToken(), jwtToken.getRefreshToken());
-        return jwtToken;
+    public ResponseEntity<JwtToken> signIn(@RequestBody @Validated(ValidationSequence.class) SignInDto signInDto) {
+        return ResponseEntity.ok(memberService.signIn(signInDto));
     }
-
 }

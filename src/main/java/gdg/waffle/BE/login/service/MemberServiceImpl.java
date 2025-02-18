@@ -37,43 +37,51 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     @Override
     public JwtToken signIn(SignInDto signInDto) {
-        String loginId = signInDto.getLoginId();
-        String password = signInDto.getPassword();
-
-        // ✅ ID 기반으로 회원 정보 조회
-        Member member = memberRepository.findByLoginId(loginId)
+        // ID 기반으로 회원 정보 조회
+        Member member = memberRepository.findByLoginId(signInDto.getLoginId())
                 .orElseThrow(() -> new IllegalArgumentException("아이디가 일치하지 않습니다."));
 
-        // ✅ 비밀번호 검증
-        if (!passwordEncoder.matches(password, member.getPassword())) {
-            log.error("비밀번호 불일치! 입력된 비밀번호: {}, 암호화된 비밀번호: {}", password, member.getPassword());
+        // 비밀번호 검증
+        if (!passwordEncoder.matches(signInDto.getPassword(), member.getPassword())) {
+            log.error("비밀번호 불일치! 입력된 비밀번호: {}, 암호화된 비밀번호: {}", signInDto.getPassword(), member.getPassword());
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
-        // 1. username + password 를 기반으로 Authentication 객체 생성
-        // 이때 authentication 은 인증 여부를 확인하는 authenticated 값이 false
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginId, password);
 
-        // 2. 실제 검증. authenticate() 메서드를 통해 요청된 Member 에 대한 검증 진행
-        // authenticate 메서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드 실행
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        try {
+            // 1. username + password 를 기반으로 Authentication 객체 생성
+            // 이때 authentication 은 인증 여부를 확인하는 authenticated 값이 false
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(signInDto.getLoginId(), signInDto.getPassword());
 
-        // 3. 인증 정보를 기반으로 JWT 토큰 생성
-        return jwtTokenProvider.generateToken(authentication);
+            // 2. 실제 검증. authenticate() 메서드를 통해 요청된 Member 에 대한 검증 진행
+            // authenticate 메서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드 실행
+            Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
+            // 3. 인증 정보를 기반으로 JWT 토큰 생성
+            return jwtTokenProvider.generateToken(authentication);
+        } catch (Exception e) {
+            throw new RuntimeException("로그인에 실패하였습니다. 관리자에게 문의해주세요.");
+        }
     }
 
     // 일반유저 회원가입
     @Transactional
     @Override
     public void signUp(SignUpDto signUpDto) {
-        // 이메일 중복확인
-        if (memberRepository.findByEmail(signUpDto.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+
+        // 아이디와 이메일 중복 확인
+        if (memberRepository.existsByLoginId(signUpDto.getLoginId()) ||
+                memberRepository.findByEmail(signUpDto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("이미 사용 중인 ID 또는 이메일입니다.");
         }
 
         // Password 암호화
         String encodedPassword = passwordEncoder.encode(signUpDto.getPassword());
-        memberRepository.save(signUpDto.toEntity(encodedPassword));
+
+        try {
+            memberRepository.save(signUpDto.toEntity(encodedPassword));
+        } catch (Exception e) {
+            throw new RuntimeException("회원 가입에 실패하였습니다. 관리자에게 문의해주세요.");
+        }
     }
 
     // 아이디 중복 확인
