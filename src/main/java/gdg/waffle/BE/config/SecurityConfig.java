@@ -46,9 +46,14 @@ public class SecurityConfig {
                 // 공개 API 설정
                 .requestMatchers("/members/login", "/members/home", "/members/sign-up", "/members/check-id",
                         "/members/sign-in", "/members/social-sign-in", "/auth/google", "/auth/google/callback",
-                        "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/custom-api-docs/**", "/resources/**")
+                        "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/custom-api-docs/**", "/resources/**",
+                        "/members/me", "members/logout")
                 .permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll() // 회원가입 요청
+
+                // ✅테스트(차후에 작업해야됨)✅ 관리자 전용 API - ROLE_ADMIN만 접근 가능
+                .requestMatchers("/members/admin").hasRole("ADMIN")
+
                 // 상태가 ACTIVE인 사용자만 모든 요청 가능하도록 추가
                 .anyRequest().access((authentication, request) -> {
                     Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();

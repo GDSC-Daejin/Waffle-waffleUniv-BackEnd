@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 페이지</title>
+</head>
+<body>
+<h1>관리자 페이지 테스트</h1>
+<button onclick="checkAdminAccess()">관리자 페이지 확인</button>
+
+<script>
+  async function checkAdminAccess() {
+    const token = localStorage.getItem("accessToken"); // JWT 토큰 가져오기
+
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      window.location.href = "/members/login"; // 로그인 페이지로 이동
+      return;
+    }
+
+    try {
+      const response = await fetch("/members/admin", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.ok) {
+        const message = await response.text();
+        alert("✅ " + message);
+      } else if (response.status === 403) {
+        alert("❌ 권한이 없습니다.");
+      } else {
+        alert("❌ 오류 발생: " + response.status);
+      }
+    } catch (error) {
+      console.error("오류 발생:", error);
+      alert("❌ 서버 오류가 발생했습니다.");
+    }
+  }
+</script>
+</body>
+</html>

@@ -5,6 +5,8 @@ import gdg.waffle.BE.config.GoogleOAuthProperties;
 import gdg.waffle.BE.login.domain.Member;
 import gdg.waffle.BE.common.jwt.JwtTokenProvider;
 import gdg.waffle.BE.login.repository.MemberRepository;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.view.RedirectView;
@@ -44,7 +46,7 @@ public class GoogleOAuthService {
     /**
      * 🔹 Google OAuth 인증 코드 처리 후 JWT 발급
      */
-    public RedirectView authenticateWithGoogle(String authCode) {
+    public RedirectView authenticateWithGoogle(String authCode, HttpServletResponse response) {
         // 1️⃣ Google에서 액세스 토큰 요청
         String tokenUrl = "https://oauth2.googleapis.com/token";
         Map<String, String> requestBody = Map.of(
@@ -55,8 +57,9 @@ public class GoogleOAuthService {
                 "grant_type", "authorization_code"
         );
 
-        Map<String, Object> response = restTemplate.postForObject(tokenUrl, requestBody, Map.class);
-        String accessToken = (String) response.get("access_token");
+        // ✅ 여기서 사용하는 accessToken은 google의 정보를 가져오기 위한 accessToken임, jwtToken의 accessToken이 아님
+        Map<String, Object> tokenResponse = restTemplate.postForObject(tokenUrl, requestBody, Map.class);
+        String accessToken = (String) tokenResponse.get("access_token");
 
         // 2️⃣ Google 사용자 정보 가져오기
         String userInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
@@ -93,13 +96,13 @@ public class GoogleOAuthService {
             memberRepository.save(member);
         }
 
-        // 4️⃣ JWT 발급 (generateTokenForSocialUser 사용)
-        JwtToken jwtToken = jwtTokenProvider.generateTokenForSocialUser(member.getEmail(),
-                "ROLE_" + member.getRole().name());
+        // 4️⃣ JWT 발급
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(email, null, List.of());
+        jwtTokenProvider.generateTokenAndSetCookie(response, authentication);
 
         // 5️⃣ JWT 포함하여 홈으로 리디렉트
         RedirectView redirectView = new RedirectView();
-        redirectView.setUrl("http://localhost:8080/members/home?jwtToken=" + jwtToken);
+        redirectView.setUrl("http://localhost:8080/members/home");
         return redirectView;
     }
 }
