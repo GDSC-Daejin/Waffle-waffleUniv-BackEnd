@@ -3,6 +3,7 @@ package gdg.waffle.BE.login.controller;
 import gdg.waffle.BE.login.service.GoogleOAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class OAuthController {
     // 소셜 유저 JWT 발급 후 홈화면 이동
     @GetMapping("/google/callback")
     @Operation(summary = "소셜 유저 JWT 발급", description = "소셜 유저에게 JWT를 발급해준 후 홈 화면으로 이동합니다.")
-    public RedirectView handleGoogleCallback(@RequestParam("code") String authCode) {
-        return googleOAuthService.authenticateWithGoogle(authCode);
+    public RedirectView handleGoogleCallback(@RequestParam("code") String authCode, HttpServletResponse response) {
+        return googleOAuthService.authenticateWithGoogle(authCode, response);
     }
 }

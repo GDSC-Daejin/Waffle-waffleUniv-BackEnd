@@ -10,8 +10,12 @@ import gdg.waffle.BE.login.domain.MemberDto;
 import gdg.waffle.BE.login.domain.SignInDto;
 import gdg.waffle.BE.login.domain.SignUpDto;
 import gdg.waffle.BE.login.repository.MemberRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +23,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,10 +41,10 @@ public class MemberServiceImpl implements MemberService {
 
     @Transactional
     @Override
-    public JwtToken signIn(SignInDto signInDto) {
+    public void signIn(SignInDto signInDto, HttpServletResponse response) {
         // ID 기반으로 회원 정보 조회
         Member member = memberRepository.findByLoginId(signInDto.getLoginId())
-                .orElseThrow(() -> new IllegalArgumentException("아이디가 일치하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하는 아이디가 없습니다."));
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(signInDto.getPassword(), member.getPassword())) {
@@ -48,16 +53,15 @@ public class MemberServiceImpl implements MemberService {
         }
 
         try {
-            // 1. username + password 를 기반으로 Authentication 객체 생성
-            // 이때 authentication 은 인증 여부를 확인하는 authenticated 값이 false
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(signInDto.getLoginId(), signInDto.getPassword());
+            // 1️⃣ AuthenticationToken 생성
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(signInDto.getLoginId(), signInDto.getPassword());
 
-            // 2. 실제 검증. authenticate() 메서드를 통해 요청된 Member 에 대한 검증 진행
-            // authenticate 메서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드 실행
+            // 2️⃣ 인증 수행 (검증)
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
-            // 3. 인증 정보를 기반으로 JWT 토큰 생성
-            return jwtTokenProvider.generateToken(authentication);
+            // 3️⃣ JWT 발급 후 쿠키에 저장
+            jwtTokenProvider.generateTokenAndSetCookie(response, authentication);
         } catch (Exception e) {
             throw new RuntimeException("로그인에 실패하였습니다. 관리자에게 문의해주세요.");
         }
@@ -84,12 +88,33 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
+    // ✅ Refresh Token을 이용한 Access Token 재발급
+    @Transactional
+    public void refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = jwtTokenProvider.getTokenFromCookie(request, "refreshToken"   );
+
+        if (refreshToken == null || !jwtTokenProvider.validateToken(refreshToken)) {
+            throw new RuntimeException("유효하지 않은 Refresh Token");
+        }
+
+        String newAccessToken = jwtTokenProvider.refreshAccessToken(refreshToken);
+        jwtTokenProvider.setCookie(response, "accessToken", newAccessToken, 3600); // 1시간 유효
+    }
+
     // 아이디 중복 확인
     @Transactional
     @Override
     public void checkId(String loginId) {
         if (memberRepository.existsByLoginId(loginId)) {
             throw new IllegalArgumentException("이미 사용 중인 ID 입니다.");
+        }
+    }
+
+    public void getCurrentUser(HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.getTokenFromCookie(request, "accessToken");
+
+        if (accessToken == null || !jwtTokenProvider.validateToken(accessToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
     }
 }

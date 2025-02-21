@@ -3,7 +3,9 @@ package gdg.waffle.BE.common.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -32,129 +34,79 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // 일반 로그인 JWT 생성 - Member 정보를 가지고 AccessToken, RefreshToken을 생성하는 메서드
-    public JwtToken generateToken(Authentication authentication) {
-        // 권한 가져오기
-        String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+    // ✅ JWT 발급 & 쿠키 저장 (AccessToken + RefreshToken)
+    public void generateTokenAndSetCookie(HttpServletResponse response, Authentication authentication) {
+        long now = System.currentTimeMillis();
 
-        long now = (new Date()).getTime();
-
-        // Access Token 생성
-        Date accessTokenExpiresIn = new Date(now + 3600000); // 유효기간 1시간 부여
+        // ✅ Access Token (1시간 유효)
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName())
-                .claim("auth", authorities)
-                .setExpiration(accessTokenExpiresIn)
+                .setExpiration(new Date(now + 3600000)) // 1시간 유효
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        // Refresh Token 생성
-        String refreshToken = Jwts.builder()
-                .setExpiration(new Date(now + 86400000)) // 유효기간 24시간 부여
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-
-        return JwtToken.builder()
-                .grantType("Bearer")
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
-
-    // 소셜 로그인 전용 JWT 생성
-    public JwtToken generateTokenForSocialUser(String email, String authority) {
-        long now = (new Date()).getTime();
-        Date accessTokenExpiresIn = new Date(now + 3600000); // 1시간 유효
-        String accessToken = Jwts.builder()
-                .setSubject(email)
-                .claim("auth", authority)
-                .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-
+        // ✅ Refresh Token (24시간 유효)
         String refreshToken = Jwts.builder()
                 .setExpiration(new Date(now + 86400000)) // 24시간 유효
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        return JwtToken.builder()
-                .grantType("Bearer")
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        // ✅ HTTP-Only 쿠키 설정 (보안 강화)
+        setCookie(response, "accessToken", accessToken, 3600);  // 1시간
+        setCookie(response, "refreshToken", refreshToken, 86400);  // 24시간
     }
 
-    // JWT 생성 권한 부여
-    // JWT 생성 권한 부여
-    public Collection<? extends GrantedAuthority> createAuthorities(String role) {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
-    }
-
-    // Jwt 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메소드
-    public Authentication getAuthentication(String accessToken) {
-        // Jwt 토큰 복호화
-        Claims claims = parseClaims(accessToken);
-
-        if (claims.get("auth") == null) {
-            throw new RuntimeException("권한 정보가 없는 토큰입니다.");
+    // ✅ Refresh Token 기반으로 Access Token 재발급
+    public String refreshAccessToken(String refreshToken) {
+        if (!validateToken(refreshToken)) {
+            throw new RuntimeException("유효하지 않은 Refresh Token");
         }
 
-        // 클레임에서 권한 정보 가져오기
-        Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("auth").toString().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        String username = getUsername(refreshToken);
+        long now = System.currentTimeMillis();
 
-        // UserDetails 객체를 만들어서 Authentication return
-        // UserDetails: interface, User: UserDetails를 구현한 class
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+        return Jwts.builder()
+                .setSubject(username)
+                .setExpiration(new Date(now + 3600000)) // 1시간 유효
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    // 토큰 정보를 검증하는 메서드
+    // ✅ 쿠키에서 JWT 추출
+    public String getTokenFromCookie(HttpServletRequest request, String tokenName) {
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (tokenName.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (SecurityException | MalformedJwtException e) {
-            log.info("Invalid JWT Token", e);
-        } catch (ExpiredJwtException e) {
-            log.info("Expired JWT Token", e);
-        } catch (UnsupportedJwtException e) {
-            log.info("Unsupported JWT Token", e);
-        } catch (IllegalArgumentException e) {
-            log.info("JWT claims string is empty.", e);
-        }
-        return false;
-    }
-
-    // 클라이언트 요청 헤더에서 JWT를 추출하는 메서드 추가
-    public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-
-        // "Bearer "로 시작하는 경우에만 JWT 토큰 추출
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7); // "Bearer " 제거 후 JWT 반환
-        }
-
-        return null; // JWT가 없으면 null 반환
-    }
-
-    // accessToken
-    private Claims parseClaims(String accessToken) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(accessToken)
-                    .getBody();
-        } catch (ExpiredJwtException e) {
-            return e.getClaims();
+        } catch (Exception e) {
+            log.error("Invalid JWT Token: {}", e.getMessage());
+            return false;
         }
     }
 
+    // ✅ 토큰에서 사용자명 추출
+    public String getUsername(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build()
+                .parseClaimsJws(token).getBody().getSubject();
+    }
+
+    // ✅ 쿠키 설정 메서드 (중복 제거)
+    public void setCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        Cookie cookie = new Cookie(name, value);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        response.addCookie(cookie);
+    }
 }
