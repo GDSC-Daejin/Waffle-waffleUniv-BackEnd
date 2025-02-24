@@ -17,8 +17,10 @@ public interface MemberService {
      */
     void signIn(SignInDto signInDto, HttpServletResponse response);
     void signUp(SignUpDto signUpDto);
+    void logout(HttpServletRequest request, HttpServletResponse response);
     void checkId(String loginId);
     void refreshAccessToken(HttpServletRequest request, HttpServletResponse response);
     void getCurrentUser(HttpServletRequest request);
+
     }
 

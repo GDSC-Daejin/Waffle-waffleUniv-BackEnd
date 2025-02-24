@@ -1,17 +1,10 @@
 package gdg.waffle.BE.login.controller;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.FirebaseToken;
-import gdg.waffle.BE.common.jwt.JwtToken;
-import gdg.waffle.BE.common.jwt.JwtTokenProvider;
 import gdg.waffle.BE.login.domain.*;
-import gdg.waffle.BE.login.repository.MemberRepository;
 import gdg.waffle.BE.login.service.MemberService;
 import gdg.waffle.BE.login.validation.ValidationSequence;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -20,13 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Tag(name = "MemberApiController", description = "유저 관련 API")
@@ -56,26 +44,16 @@ public class MemberApiController {
     @PostMapping("/sign-in")
     @Operation(summary = "일반 유저 로그인", description = "일반 유저의 로그인을 진행합니다.")
     public ResponseEntity<String> signIn(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response) {
+        log.info("로그인 컨트롤러");
         memberService.signIn(signInDto, response);
         return ResponseEntity.ok("로그인 성공");
     }
 
     // 로그아웃
     @PostMapping("/logout")
-    @Operation(summary = "유저 로그아웃", description = "유저의 로그아웃을 진행합니다.")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        // 쿠키 삭제
-        Cookie accessToken = new Cookie("accessToken", null);
-        accessToken.setMaxAge(0);
-        accessToken.setPath("/");
-
-        Cookie refreshToken = new Cookie("refreshToken", null);
-        refreshToken.setMaxAge(0);
-        refreshToken.setPath("/");
-
-        response.addCookie(accessToken);
-        response.addCookie(refreshToken);
-
+    @Operation(summary = "유저 로그아웃", description = "유저의 로그아웃을 진행합니다. 동시에 JwtToken의 AccessToken과 RefreshToken을 모두 폐기합니다.")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        memberService.logout(request, response);
         return ResponseEntity.ok("로그아웃 완료");
     }
 
@@ -83,7 +61,7 @@ public class MemberApiController {
     @GetMapping("/me")
     @Operation(summary = "로그인 상태 확인", description = "현재 로그인한 사용자의 정보를 반환합니다.")
     public ResponseEntity<String> getCurrentUser(HttpServletRequest request) {
-        log.info("getCurrentUser 도착");
+        log.info("getCurrentUser 실행");
         memberService.getCurrentUser(request);
         return ResponseEntity.ok("로그인 상태 유지 중");
     }

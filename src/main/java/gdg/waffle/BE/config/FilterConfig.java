@@ -3,22 +3,24 @@ package gdg.waffle.BE.config;
 import com.google.firebase.auth.FirebaseAuth;
 import gdg.waffle.BE.common.firebase.FirebaseTokenFilter;
 import gdg.waffle.BE.common.jwt.JwtAuthenticationFilter;
-import gdg.waffle.BE.common.jwt.JwtTokenProvider;
+import gdg.waffle.BE.common.jwt.JwtTokenManager;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Component;
 
 @Configuration
+@Component
 public class FilterConfig {
     private final UserDetailsService userDetailsService;
     private final FirebaseAuth firebaseAuth;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenManager jwtTokenManager;
 
-    public FilterConfig(UserDetailsService userDetailsService, FirebaseAuth firebaseAuth, JwtTokenProvider jwtTokenProvider) {
+    public FilterConfig(UserDetailsService userDetailsService, FirebaseAuth firebaseAuth, JwtTokenManager jwtTokenManager) {
         this.userDetailsService = userDetailsService;
         this.firebaseAuth = firebaseAuth;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtTokenManager = jwtTokenManager;
     }
 
     // ✅ FirebaseTokenFilter를 소셜 로그인 관련 API에서만 실행되도록 설정
@@ -40,7 +42,7 @@ public class FilterConfig {
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter> jwtFilterRegistration() {
         FilterRegistrationBean<JwtAuthenticationFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new JwtAuthenticationFilter(jwtTokenProvider));
+        registrationBean.setFilter(new JwtAuthenticationFilter(jwtTokenManager));
 
         // ✅ JWT 인증이 필요한 API 경로만 필터 적용 (추가 필요)
         registrationBean.addUrlPatterns("/members/추가 필요");

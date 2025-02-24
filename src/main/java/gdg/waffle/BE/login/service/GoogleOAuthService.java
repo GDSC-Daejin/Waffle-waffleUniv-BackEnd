@@ -1,9 +1,8 @@
 package gdg.waffle.BE.login.service;
 
-import gdg.waffle.BE.common.jwt.JwtToken;
 import gdg.waffle.BE.config.GoogleOAuthProperties;
 import gdg.waffle.BE.login.domain.Member;
-import gdg.waffle.BE.common.jwt.JwtTokenProvider;
+import gdg.waffle.BE.common.jwt.JwtTokenManager;
 import gdg.waffle.BE.login.repository.MemberRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,22 +13,21 @@ import org.springframework.web.servlet.view.RedirectView;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class GoogleOAuthService {
 
     private final GoogleOAuthProperties googleOAuthProperties;
     private final MemberRepository memberRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenManager jwtTokenManager;
     private final RestTemplate restTemplate = new RestTemplate();
 
     public GoogleOAuthService(GoogleOAuthProperties googleOAuthProperties,
                               MemberRepository memberRepository,
-                              JwtTokenProvider jwtTokenProvider) {
+                              JwtTokenManager jwtTokenManager) {
         this.googleOAuthProperties = googleOAuthProperties;
         this.memberRepository = memberRepository;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtTokenManager = jwtTokenManager;
     }
 
     /**
@@ -98,7 +96,7 @@ public class GoogleOAuthService {
 
         // 4️⃣ JWT 발급
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(email, null, List.of());
-        jwtTokenProvider.generateTokenAndSetCookie(response, authentication);
+        jwtTokenManager.generateTokenAndSetCookie(response, authentication);
 
         // 5️⃣ JWT 포함하여 홈으로 리디렉트
         RedirectView redirectView = new RedirectView();
