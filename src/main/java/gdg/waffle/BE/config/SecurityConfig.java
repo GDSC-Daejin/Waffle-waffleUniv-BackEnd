@@ -1,12 +1,10 @@
 package gdg.waffle.BE.config;
 
-import gdg.waffle.BE.common.jwt.JwtTokenProvider;
 import gdg.waffle.BE.login.repository.MemberRepository;
 import gdg.waffle.BE.login.service.CustomUserDetails;
 import gdg.waffle.BE.login.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import com.google.firebase.auth.FirebaseAuth;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -21,7 +19,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.http.HttpStatus;
@@ -47,7 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/members/login", "/members/home", "/members/sign-up", "/members/check-id",
                         "/members/sign-in", "/members/social-sign-in", "/auth/google", "/auth/google/callback",
                         "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/custom-api-docs/**", "/resources/**",
-                        "/members/me", "members/logout")
+                        "/members/me", "members/logout", "members/refresh-token")
                 .permitAll()
                 .requestMatchers(HttpMethod.POST, "/users").permitAll() // 회원가입 요청
 

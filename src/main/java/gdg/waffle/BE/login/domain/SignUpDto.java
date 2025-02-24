@@ -19,14 +19,14 @@ import java.util.List;
 @Data
 public class SignUpDto {
 
-    // 아이디 - 최소 4 ~ 15 글자 제한, 영소문자, 숫자, -_(특수문자)만 허용
+    // 아이디 - 최소 4 ~ 최대 15 글자 제한, 영소문자, 숫자, -_(특수문자)만 허용
     @NotBlank(message = "로그인 ID는 필수 입력 항목입니다.", groups = ValidationGroups.NotBlankGroup.class)
     @Pattern(message = "잘못된 아이디 형식입니다.", regexp = "^[a-z0-9_-]{4,15}", groups = ValidationGroups.PatternGroup.class)
     private String loginId;
 
     // 비밀번호 - 영문자, 숫자, 특수문자 각 최소 하나씩 포함돼야 함
     @NotBlank(message = "비밀번호는 필수 입력 항목입니다.", groups = ValidationGroups.NotBlankGroup.class)
-    @Pattern(message = "잘못된 비밀번호 형식입니다.", regexp = "^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[$@$!%*#?&])[A-Za-z0-9$@$!%*#?&]{8,15}$",
+    @Pattern(message = "잘못된 비밀번호 형식입니다.", regexp = "^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[$@$!%*#?&])[A-Za-z0-9$@$!%*#?&]{8,20}$",
             groups = ValidationGroups.PatternGroup.class)
     private String password;
 
