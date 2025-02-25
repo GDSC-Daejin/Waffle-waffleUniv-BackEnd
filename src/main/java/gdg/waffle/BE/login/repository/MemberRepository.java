@@ -5,12 +5,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
+// 회원 정보를 조회하는 JPA Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    Optional<Member> findByLoginId(String loginId); // 로그인 아이디로 유저 정보 반환
+    // 로그인 아이디로 유저 정보 조회 (Optional로 반환)
+    Optional<Member> findByLoginId(String loginId);
 
-    Optional<Member> findByEmail(String email); // UID 기반 유저 조회
+    // 이메일을 기반으로 유저 정보 조회 (Optional로 반환)
+    Optional<Member> findByEmail(String email);
 
-    boolean existsByLoginId(String loginId); // 로그인 아이디로 유저 유무 반환
+    // 특정 로그인 아이디가 존재하는지 여부 반환 (true: 존재함, false: 없음)
+    boolean existsByLoginId(String loginId);
 
-    long countByIsSocialUser(boolean isSocialUser); // 현재 등록된 소셜 유저 수 조회
+    // 현재 등록된 소셜 로그인 유저의 수 반환
+    long countByIsSocialUser(boolean isSocialUser);
 }
