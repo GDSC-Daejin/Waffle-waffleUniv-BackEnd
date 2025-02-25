@@ -18,9 +18,10 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @Tag(name = "MemberApiController", description = "유저 관련 API")
-@RestController
-@RequiredArgsConstructor
+@RestController // REST API 컨트롤러로 설정
+@RequiredArgsConstructor // 생성자 주입을 위한 Lombok 어노테이션
 @RequestMapping("/members")
+// 유저 관련 API를 제공하는 컨트롤러
 public class MemberApiController {
     private final MemberService memberService;
 
@@ -40,7 +41,7 @@ public class MemberApiController {
         return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 완료되었습니다.");
     }
 
-    // 일반 로그인
+    // 일반 유저 로그인
     @PostMapping("/sign-in")
     @Operation(summary = "일반 유저 로그인", description = "일반 유저의 로그인을 진행합니다.")
     public ResponseEntity<String> signIn(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response) {

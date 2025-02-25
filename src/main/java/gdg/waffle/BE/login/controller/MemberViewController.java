@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/members")
+// 유저 관련 페이지 이동을 처리하는 컨트롤러
 public class MemberViewController {
-    private final MemberService memberService;
 
     @GetMapping("/login") // 로그인 페이지 이동
     @Operation(summary = "일반 유저 로그인 페이지 이동", description = "일반 유저의 로그인 페이지로 이동합니다.")

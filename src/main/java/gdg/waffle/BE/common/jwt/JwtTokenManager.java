@@ -19,41 +19,39 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+// JWT 토큰 관리 클래스: JWT 생성, 검증, 저장, 삭제 및 Redis와의 연동을 담당
 @Slf4j
 @Component
 public class JwtTokenManager {
     private final Key key;
     private final StringRedisTemplate redisTemplate;
 
-    // 전역변수
+    // 전역변수 - Access Token과 Refresh Token의 만료 시간 설정
     private static final long ACCESS_TOKEN_EXPIRATION = 3600000; // 1시간
     private static final long REFRESH_TOKEN_EXPIRATION = 86400000; // 24시간
     private static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
 
-    // application.yml에서 secret 값 가져와서 key에 저장
+    // application.yml에서 JWT 비밀키를 가져와 Key 객체로 변환
     public JwtTokenManager(@Value("${jwt.secret}") String secretKey, StringRedisTemplate redisTemplate) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.redisTemplate = redisTemplate;
     }
 
-    // ✅ JWT 발급 & 쿠키 저장 (AccessToken + RefreshToken)
+    // JWT 발급 & HTTP-Only 쿠키 저장 (AccessToken + RefreshToken)
     public void generateTokenAndSetCookie(HttpServletResponse response, Authentication authentication) {
-        log.info("generateTokenAndSetCookie 실행");
         String username = authentication.getName();
 
-        // ✅ Access Token & Refresh Token 생성
+        // Access Token & Refresh Token 생성
         Map<String, String> tokens = generateTokens(username);
         log.info("tokens 생성 : {}", tokens);
 
-        // ✅ Refresh Token을 Redis에 저장
+        // Refresh Token을 Redis에 저장
         storeRefreshToken(username, tokens.get("refreshToken"));
-        log.info("Refresh Token을 Redis에 저장");
 
-        // ✅ HTTP-Only 쿠키 설정 (보안 강화)
+        // HTTP-Only 쿠키 설정 (보안 강화)
         setCookie(response, "accessToken", tokens.get("accessToken"), (int) (ACCESS_TOKEN_EXPIRATION / 1000));
         setCookie(response, "refreshToken", tokens.get("refreshToken"), (int) (REFRESH_TOKEN_EXPIRATION / 1000));
-        log.info("토큰 쿠키저장 완료");
 
         log.info("AccessToken 발급 성공: {}", tokens.get("accessToken"));
         log.info("RefreshToken 발급 성공: {}", tokens.get("refreshToken"));
@@ -107,30 +105,30 @@ public class JwtTokenManager {
                 .compact();
     }
 
-    // ✅ Refresh Token을 Redis에 저장
+    // Refresh Token을 Redis에 저장
     public void storeRefreshToken(String username, String refreshToken) {
         redisTemplate.opsForValue().set(REFRESH_TOKEN_PREFIX + username, refreshToken, REFRESH_TOKEN_EXPIRATION, TimeUnit.MILLISECONDS);
     }
 
-    // ✅ Redis에서 Refresh Token 검증
+    // Redis에서 Refresh Token 검증
     public boolean validateRefreshToken(String username, String refreshToken) {
         String storedToken = redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + username);
 
-        // ✅ Redis에 저장된 값이 없거나 다르면 실패
+        // Redis에 저장된 값이 없거나 다르면 실패
         if (storedToken == null || !storedToken.equals(refreshToken)) {
             return false;
         }
 
-        // ✅ Refresh Token 자체가 유효한지 확인
+        // Refresh Token 자체가 유효한지 확인
         return validateToken(refreshToken, true);
     }
 
-    // ✅ 로그아웃 시 Refresh Token 삭제
+    // 로그아웃 시 Refresh Token 삭제 (Redis에서 제거)
     public void deleteRefreshToken(String username) {
         redisTemplate.delete(REFRESH_TOKEN_PREFIX + username);
     }
 
-    // ✅ 쿠키에서 JWT 추출
+    // 쿠키에서 JWT 추출
     public String getTokenFromCookie(HttpServletRequest request, String tokenName) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
@@ -142,7 +140,7 @@ public class JwtTokenManager {
         return null;
     }
 
-    // 토큰이 유효한지 검증
+    // JWT 토큰이 유효한지 검증
     public boolean validateToken(String token, boolean isRefreshToken) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -153,13 +151,13 @@ public class JwtTokenManager {
         }
     }
 
-    // ✅ 토큰에서 사용자명 추출
+    // JWT에서 사용자명 추출
     public String getUsername(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    // ✅ 쿠키 설정 메서드 (중복 제거)
+    // HTTP-Only 쿠키 설정 메서드 (보안 강화)
     public void setCookie(HttpServletResponse response, String name, String value, int maxAge) {
         Cookie cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);

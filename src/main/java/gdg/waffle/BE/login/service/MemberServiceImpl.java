@@ -24,41 +24,38 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
+// 회원 관련 비즈니스 로직을 처리하는 서비스 클래스
 public class MemberServiceImpl implements MemberService {
-    private final MemberRepository memberRepository;
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenManager jwtTokenManager;
-    private final PasswordEncoder passwordEncoder; // 올바른 passwordEncoder 사용
+
+    private final MemberRepository memberRepository; // 회원 정보를 다루는 JPA Repository
+    private final AuthenticationManager authenticationManager; // Spring Security 인증 관리자
+    private final JwtTokenManager jwtTokenManager; // JWT 발급 및 관리
+    private final PasswordEncoder passwordEncoder; // 비밀번호 암호화 및 검증
 
     // 로그인
     @Transactional
     @Override
     public void signIn(SignInDto signInDto, HttpServletResponse response) {
-        log.info("로그인 서비스 시작");
-        // ID 기반으로 회원 정보 조회
+
+        // 아이디로 회원 조회, 없으면 예외 발생
         Member member = memberRepository.findByLoginId(signInDto.getLoginId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하는 아이디가 없습니다."));
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(signInDto.getPassword(), member.getPassword())) {
-            log.error("비밀번호 불일치! 입력된 비밀번호: {}, 암호화된 비밀번호: {}", signInDto.getPassword(), member.getPassword());
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
-        log.info("비밀번호 검증까지완료");
 
         try {
-            // 1️⃣ AuthenticationToken 생성
+            // AuthenticationToken 생성
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(signInDto.getLoginId(), signInDto.getPassword());
-            log.info("AuthenticationToken 생성 : {}", authenticationToken);
 
-            // 2️⃣ 인증 수행 (검증)
+            // 인증 수행 (검증)
             Authentication authentication = authenticationManager.authenticate(authenticationToken);
-            log.info("Authentication 생성 : {}", authentication);
 
-            // 3️⃣ JWT 발급 후 쿠키에 저장
+            // JWT 발급 후 쿠키에 저장
             jwtTokenManager.generateTokenAndSetCookie(response, authentication);
-            log.info("JWT 발급 후 쿠키 저장완료");
         } catch (Exception e) {
             throw new RuntimeException("로그인에 실패하였습니다. 관리자에게 문의해주세요.");
         }
@@ -84,7 +81,7 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
-    // ✅ 로그아웃 (Refresh Token 삭제 + 쿠키 삭제)
+    // 로그아웃 (Refresh Token 삭제 + 쿠키 삭제)
     @Transactional
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = jwtTokenManager.getTokenFromCookie(request, "refreshToken");
@@ -94,12 +91,12 @@ public class MemberServiceImpl implements MemberService {
             jwtTokenManager.deleteRefreshToken(username); // ✅ Redis에서 Refresh Token 삭제
         }
 
-        // ✅ 쿠키 삭제
+        // 쿠키 삭제
         jwtTokenManager.setCookie(response, "accessToken", null, 0);
         jwtTokenManager.setCookie(response, "refreshToken", null, 0);
     }
 
-    // ✅ Refresh Token을 이용한 Access Token 재발급
+    // Refresh Token을 이용한 Access Token 재발급
     @Transactional
     public void refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = jwtTokenManager.getTokenFromCookie(request, "refreshToken");
@@ -110,26 +107,23 @@ public class MemberServiceImpl implements MemberService {
 
         String username = jwtTokenManager.getUsername(refreshToken);
 
-        // ✅ Redis + JWT 자체 검증
+        // Redis 및 JWT 자체 검증
         if (!jwtTokenManager.validateRefreshToken(username, refreshToken)) {
             throw new RuntimeException("유효하지 않은 Refresh Token");
         }
 
-        // ✅ 새 Access Token & Refresh Token 생성
+        // 새 Access Token 및 Refresh Token 생성
         Map<String, String> newTokens = jwtTokenManager.generateTokens(username);
 
-        // ✅ Redis에 새로운 Refresh Token 저장
+        // Redis에 새로운 Refresh Token 저장
         jwtTokenManager.storeRefreshToken(username, newTokens.get("refreshToken"));
 
-        log.info("✅ 새로운 AccessToken 발급: {}", newTokens.get("accessToken"));
-        log.info("✅ 새로운 RefreshToken 발급: {}", newTokens.get("refreshToken"));
-
-        // ✅ 새 토큰을 쿠키에 저장
+        // 새 토큰을 쿠키에 저장
         jwtTokenManager.setCookie(response, "accessToken", newTokens.get("accessToken"), 3600);
         jwtTokenManager.setCookie(response, "refreshToken", newTokens.get("refreshToken"), 86400);
     }
 
-    // ✅ 아이디 중복 확인
+    // 아이디 중복 확인
     @Transactional
     @Override
     public void checkId(String loginId) {
@@ -138,7 +132,7 @@ public class MemberServiceImpl implements MemberService {
         }
     }
 
-    // ✅ 로그인한 유저의 토큰이 유효한지 검사
+    // 로그인한 유저의 토큰이 유효한지 검사
     public void getCurrentUser(HttpServletRequest request) {
         String accessToken = jwtTokenManager.getTokenFromCookie(request, "accessToken");
 

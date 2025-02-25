@@ -11,9 +11,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 @Configuration
+// Firebase 설정 클래스: Firebase 인증을 위한 FirebaseAuth 빈을 생성
 public class FirebaseConfig {
 
-    // Firebase 인증관리
+    // Firebase 인증 관리 객체(FirebaseAuth) 생성
     @Bean
     public FirebaseAuth firebaseAuth(FirebaseApp firebaseApp) {
         return FirebaseAuth.getInstance(firebaseApp);

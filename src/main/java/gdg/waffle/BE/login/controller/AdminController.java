@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
+// 관리자 전용 API를 제공하는 컨트롤러
 public class AdminController {
 
     @GetMapping("/test")

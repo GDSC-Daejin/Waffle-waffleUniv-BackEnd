@@ -11,10 +11,10 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
-                .components(new Components())
+                .components(new Components()) // OpenAPI의 컴포넌트 설정 (추후 보안, 인증 관련 설정 가능)
                 .info(new Info()
-                        .title("GoStock API")
-                        .description("GoStock 서비스의 API 문서입니다.")
-                        .version("1.0.0"));
+                        .title("GoStock API") // API 문서 제목 설정
+                        .description("GoStock 서비스의 API 문서입니다.") // API 문서 설명
+                        .version("1.0.0")); // API 버전 설정
     }
 }
