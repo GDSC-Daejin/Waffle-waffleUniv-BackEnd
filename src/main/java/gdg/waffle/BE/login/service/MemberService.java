@@ -22,7 +22,7 @@ public interface MemberService {
     void logout(HttpServletRequest request, HttpServletResponse response);
 
     // 주어진 로그인 ID가 이미 존재하는지 확인
-    void checkId(String loginId);
+    boolean checkId(String loginId);
 
     // Refresh Token을 사용하여 새로운 Access Token을 발급
     void refreshAccessToken(HttpServletRequest request, HttpServletResponse response);

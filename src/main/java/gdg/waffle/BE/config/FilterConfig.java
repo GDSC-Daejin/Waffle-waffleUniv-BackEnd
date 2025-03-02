@@ -47,7 +47,7 @@ public class FilterConfig {
         registrationBean.setFilter(new JwtAuthenticationFilter(jwtTokenManager));
 
         // JWT 인증이 필요한 API 경로 설정 (보호할 엔드포인트 추가 필요)
-        registrationBean.addUrlPatterns("/members/아무거나");
+        registrationBean.addUrlPatterns("/members/refresh-token, /members/게시판 API");
 
         // 필터 실행 순서 지정 (Firebase 필터보다 뒤에 실행됨)
         registrationBean.setOrder(2);
