@@ -28,9 +28,9 @@ public class MemberApiController {
     // 아이디 중복 확인
     @GetMapping("/check-id")
     @Operation(summary = "아이디 중복 확인", description = "회원가입 시, 유저가 입력한 아이디가 중복되는지 확인합니다.")
-    public ResponseEntity<String> checkId(@RequestParam @NotBlank(message = "아이디를 입력해주세요.") String loginId) {
-        memberService.checkId(loginId);
-        return ResponseEntity.ok("사용 가능한 아이디입니다.");
+    public ResponseEntity<Boolean> checkId(@RequestParam @NotBlank(message = "아이디를 입력해주세요.") String loginId) {
+        boolean isAvailable =  memberService.checkId(loginId);
+        return ResponseEntity.ok(isAvailable);
     }
 
     // 회원가입

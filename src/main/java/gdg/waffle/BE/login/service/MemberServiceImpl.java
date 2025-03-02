@@ -126,9 +126,11 @@ public class MemberServiceImpl implements MemberService {
     // 아이디 중복 확인
     @Transactional
     @Override
-    public void checkId(String loginId) {
+    public boolean checkId(String loginId) {
         if (memberRepository.existsByLoginId(loginId)) {
-            throw new IllegalArgumentException("이미 사용 중인 ID 입니다.");
+            return false;
+        } else {
+            return true;
         }
     }
 
