@@ -16,6 +16,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // 특정 로그인 아이디가 존재하는지 여부 반환 (true: 존재함, false: 없음)
     boolean existsByLoginId(String loginId);
 
+    // 이메일 중복 확인
+    boolean existsByEmail(String email);
+
     // 현재 등록된 소셜 로그인 유저의 수 반환
     long countByIsSocialUser(boolean isSocialUser);
 }

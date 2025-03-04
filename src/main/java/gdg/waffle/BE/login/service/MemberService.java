@@ -24,6 +24,9 @@ public interface MemberService {
     // 주어진 로그인 ID가 이미 존재하는지 확인
     boolean checkId(String loginId);
 
+    // 이메일 중복 확인
+    boolean checkEmail(String email);
+
     // Refresh Token을 사용하여 새로운 Access Token을 발급
     void refreshAccessToken(HttpServletRequest request, HttpServletResponse response);
 

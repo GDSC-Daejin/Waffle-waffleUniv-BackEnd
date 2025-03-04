@@ -127,11 +127,14 @@ public class MemberServiceImpl implements MemberService {
     @Transactional
     @Override
     public boolean checkId(String loginId) {
-        if (memberRepository.existsByLoginId(loginId)) {
-            return false;
-        } else {
-            return true;
-        }
+        return memberRepository.existsByLoginId(loginId);
+    }
+
+    // 이메일 중복 확인
+    @Transactional
+    @Override
+    public boolean checkEmail(String email) {
+        return memberRepository.existsByEmail(email);
     }
 
     // 로그인한 유저의 토큰이 유효한지 검사

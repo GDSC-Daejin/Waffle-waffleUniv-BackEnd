@@ -55,6 +55,12 @@ public class GlobalExceptionHandler {
                 .body("서버 오류 발생: " + e.getMessage());
     }
 
+    // NullPointerException
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<String> handleNullPointerException(NullPointerException e){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    }
+
     // 공통 응답 DTO
     @Data
     @AllArgsConstructor
