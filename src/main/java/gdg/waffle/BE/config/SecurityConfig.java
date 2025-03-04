@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/members/sign-up", "/members/sign-in", "/members/check-id", "/members/home", "/members/login",
                         "/auth/google", "/auth/google/callback",
+                        "mailSend", "mailauthCheck",
                         "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/custom-api-docs/**", "/resources/**"
                 ).permitAll()
 

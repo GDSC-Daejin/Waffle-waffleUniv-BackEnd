@@ -3,6 +3,7 @@ package gdg.waffle.BE.login.service;
 import gdg.waffle.BE.login.domain.Member;
 import gdg.waffle.BE.login.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.List;
 
+@Primary
 @Service
 @RequiredArgsConstructor
 // Spring Security에서 사용자 인증을 처리하는 서비스 클래스
