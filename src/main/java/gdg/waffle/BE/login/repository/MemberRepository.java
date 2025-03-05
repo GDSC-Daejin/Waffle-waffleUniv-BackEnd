@@ -13,8 +13,11 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // 이메일을 기반으로 유저 정보 조회 (Optional로 반환)
     Optional<Member> findByEmail(String email);
 
-    // 특정 로그인 아이디가 존재하는지 여부 반환 (true: 존재함, false: 없음)
+    // 아이디 중복 확인
     boolean existsByLoginId(String loginId);
+
+    // 닉네임 중복 확인
+    boolean existsByNickName(String nickName);
 
     // 이메일 중복 확인
     boolean existsByEmail(String email);
