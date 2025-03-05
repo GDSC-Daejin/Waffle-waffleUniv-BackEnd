@@ -58,7 +58,6 @@ public class MemberApiController {
     @PostMapping("/sign-in")
     @Operation(summary = "일반 유저 로그인", description = "일반 유저의 로그인을 진행합니다.")
     public ResponseEntity<String> signIn(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response) {
-        log.info("로그인 컨트롤러");
         memberService.signIn(signInDto, response);
         return ResponseEntity.ok("로그인 성공");
     }
