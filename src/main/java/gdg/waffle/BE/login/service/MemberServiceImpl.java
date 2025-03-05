@@ -39,11 +39,11 @@ public class MemberServiceImpl implements MemberService {
 
         // 아이디로 회원 조회, 없으면 예외 발생
         Member member = memberRepository.findByLoginId(signInDto.getLoginId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하는 아이디가 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다."));
 
         // 비밀번호 검증
         if (!passwordEncoder.matches(signInDto.getPassword(), member.getPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
         }
 
         try {
