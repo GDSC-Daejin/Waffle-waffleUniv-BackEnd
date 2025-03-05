@@ -130,6 +130,13 @@ public class MemberServiceImpl implements MemberService {
         return memberRepository.existsByLoginId(loginId);
     }
 
+    // 닉네임 중복 확인
+    @Transactional
+    @Override
+    public boolean checkNick(String nickName) {
+        return memberRepository.existsByNickName(nickName);
+    }
+
     // 이메일 중복 확인
     @Transactional
     @Override

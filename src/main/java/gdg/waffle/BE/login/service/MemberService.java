@@ -21,8 +21,11 @@ public interface MemberService {
     // 사용자의 로그아웃을 처리하고 JWT 토큰을 폐기
     void logout(HttpServletRequest request, HttpServletResponse response);
 
-    // 주어진 로그인 ID가 이미 존재하는지 확인
+    // 유저가 입력한 ID가 이미 존재하는지 확인
     boolean checkId(String loginId);
+
+    // 유저가 입력한 닉네임이 이미 존재하는지 확인
+    boolean checkNick(String nickName);
 
     // 이메일 중복 확인
     boolean checkEmail(String email);

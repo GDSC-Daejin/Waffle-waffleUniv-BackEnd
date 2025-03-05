@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "MemberApiController", description = "유저 관련 API")
 @RestController // REST API 컨트롤러로 설정
 @RequiredArgsConstructor // 생성자 주입을 위한 Lombok 어노테이션
+@CrossOrigin(origins = "http://localhost:3000") // CORS 허용 추가
 @RequestMapping("/members")
 // 유저 관련 API를 제공하는 컨트롤러
 public class MemberApiController {
@@ -32,7 +33,16 @@ public class MemberApiController {
         if (memberService.checkId(loginId)) {
             return ResponseEntity.ok(false);
         }
+        return ResponseEntity.ok(true);
+    }
 
+    //닉네임 중복 확인
+    @GetMapping("/check-nick")
+    @Operation(summary = "닉네임 중복 확인", description = "회원가입 시, 유저가 입력한 닉네임이 중복되는지 확인합니다.")
+    public ResponseEntity<Boolean> checkNick(@RequestParam @NotBlank(message = "닉네임을 입력해주세요.") String nickName) {
+        if (memberService.checkNick(nickName)) {
+            return ResponseEntity.ok(false);
+        }
         return ResponseEntity.ok(true);
     }
 

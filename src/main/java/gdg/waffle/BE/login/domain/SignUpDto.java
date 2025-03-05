@@ -23,7 +23,7 @@ public class SignUpDto {
 
     // 로그인 ID - 4~15자, 영소문자, 숫자, 특수문자(-, _) 허용
     @NotBlank(message = "로그인 ID는 필수 입력 항목입니다.", groups = ValidationGroups.NotBlankGroup.class)
-    @Pattern(message = "잘못된 아이디 형식입니다.", regexp = "^[a-z0-9_-]{4,15}", groups = ValidationGroups.PatternGroup.class)
+    @Pattern(message = "잘못된 아이디 형식입니다.", regexp = "^[a-zA-Z0-9_-]{4,15}", groups = ValidationGroups.PatternGroup.class)
     private String loginId;
 
     // 비밀번호 - 8~20자, 영문자, 숫자, 특수문자 최소 하나 포함

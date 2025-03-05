@@ -23,8 +23,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.io.IOException;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -36,6 +40,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 설정 추가
                 .httpBasic().disable()// 기본 인증 비활성화 (JWT 사용)
                 .csrf().disable()// CSRF 보안 비활성화 (REST API)
                 // JWT를 사용하기 때문에 세션을 사용하지 않음
@@ -45,7 +50,7 @@ public class SecurityConfig {
 
                 // 인증 없이 접근 가능한 경로 (permitAll)
                 .requestMatchers(
-                        "/members/sign-up", "/members/sign-in", "/members/check-id", "/members/home", "/members/login",
+                        "/members/sign-up", "/members/sign-in", "/members/check-id", "/members/check-nick", "/members/home", "/members/login",
                         "/auth/google", "/auth/google/callback",
                         "mailSend", "mailauthCheck",
                         "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**", "/custom-api-docs/**", "/resources/**"
@@ -86,6 +91,22 @@ public class SecurityConfig {
                         })
                 )
                 .build();
+    }
+
+    // CORS 설정 추가
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowCredentials(true);
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     // 비밀번호 암호화를 위한 BCryptPasswordEncoder 빈 설정
