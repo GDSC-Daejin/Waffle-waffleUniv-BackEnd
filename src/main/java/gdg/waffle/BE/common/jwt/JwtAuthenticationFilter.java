@@ -2,41 +2,52 @@ package gdg.waffle.BE.common.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StringUtils;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
-@RequiredArgsConstructor
-public class JwtAuthenticationFilter extends GenericFilterBean {
-    private final JwtTokenProvider jwtTokenProvider;
+// JWT 인증 필터 클래스: 요청에서 쿠키로부터 JWT를 추출해 인증을 처리하고 SecurityContext에 저장
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private final JwtTokenManager jwtTokenManager; // JWT 토큰을 관리하는 객체
+
+    public JwtAuthenticationFilter(JwtTokenManager jwtTokenManager) {
+        this.jwtTokenManager = jwtTokenManager;
+    }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        // 1. Request Header에서 JWT 토큰 추출
-        String token = resolveToken((HttpServletRequest) request);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        // 2. validateToken으로 토큰 유효성 검사
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            // 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
-        chain.doFilter(request, response);
-    }
+        // 쿠키에서 Access Token 추출 (기존 Authorization 헤더 방식에서 변경)
+        String token = jwtTokenManager.getTokenFromCookie(request, "accessToken");
 
-    // Request Header에서 토큰 정보 추출
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
-            return bearerToken.substring(7);
+        // 토큰이 존재하고 유효한지 검증
+        if (token != null && jwtTokenManager.validateToken(token, false)) { // ✅ Access Token 검증
+            try {
+                String username = jwtTokenManager.getUsername(token); // 토큰에서 사용자명 추출
+
+                // 사용자 권한 설정 (기본값: ROLE_USER)
+                List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+
+                // Spring Security 인증 정보 생성 및 컨텍스트에 저장
+                var authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            } catch (Exception e) {
+                logger.error("JWT 검증 중 오류 발생 : ", e);
+            }
         }
-        return null;
+
+        // ✅ 필터 체인 계속 진행
+        filterChain.doFilter(request, response);
     }
 }
+

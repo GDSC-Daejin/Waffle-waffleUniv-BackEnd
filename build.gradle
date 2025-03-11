@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.5'
-    id 'io.spring.dependency-management' version '1.1.6'
+    id 'org.springframework.boot' version '3.3.5' // Spring Boot 플러그인
+    id 'io.spring.dependency-management' version '1.1.6' // Spring 의존성 관리 플러그인
 }
 
 group = 'GDG.DJU'
@@ -9,43 +9,68 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(21) // Java 21 버전 사용
     }
 }
 
 configurations {
     compileOnly {
-        extendsFrom annotationProcessor
+        extendsFrom annotationProcessor // 애노테이션 프로세서를 위한 설정
     }
 }
 
 repositories {
-    mavenCentral()
+    mavenCentral() // 중앙 Maven 저장소 사용
 }
 
 dependencies {
+    // MySQL 데이터베이스 드라이버
     runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // Lombok (코드 자동 생성, Getter/Setter 등)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.2.0'
+    // Spring Boot 기본 의존성
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // JWT (토큰 기반 인증)
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-    implementation 'org.projectlombok:lombok'
+
+    // Google Guava (유틸리티 라이브러리)
     implementation 'com.google.guava:guava:31.1-jre'
 
+    // 구글 소셜로그인 (Firebase 인증)
+    implementation 'com.google.firebase:firebase-admin:9.1.1'
+
+    // Swagger API 문서 자동화
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+
+    // Redis (세션 관리, 캐싱)
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // 구글 소셜로그인
+    implementation 'com.google.firebase:firebase-admin:9.1.1'
+
+    // 메일 인증 (이메일 전송)
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // .env 파일 로드용 dotenv
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+
+    // 개발 모드에서 자동 리로드 기능 (Hot Reload)
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
+    // 테스트 관련 라이브러리
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.assertj:assertj-core:3.24.2'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
-
 }
 
 tasks.named('test') {

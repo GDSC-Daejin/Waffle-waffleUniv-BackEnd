@@ -1,53 +1,90 @@
 package gdg.waffle.BE.login.controller;
 
-import gdg.waffle.BE.common.jwt.JwtToken;
-import gdg.waffle.BE.login.domain.MemberDto;
-import gdg.waffle.BE.login.domain.SignInDto;
-import gdg.waffle.BE.login.domain.SignUpDto;
+import gdg.waffle.BE.login.domain.*;
 import gdg.waffle.BE.login.service.MemberService;
+import gdg.waffle.BE.login.validation.ValidationSequence;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-@RestController
-@RequiredArgsConstructor
+@Tag(name = "MemberApiController", description = "유저 관련 API")
+@RestController // REST API 컨트롤러로 설정
+@RequiredArgsConstructor // 생성자 주입을 위한 Lombok 어노테이션
+@CrossOrigin(origins = "http://localhost:3000") // CORS 허용 추가
 @RequestMapping("/members")
+// 유저 관련 API를 제공하는 컨트롤러
 public class MemberApiController {
     private final MemberService memberService;
 
-    @PostMapping("/sign-in")
-    public JwtToken signIn(@RequestBody SignInDto signInDto) {
-        String loginId = signInDto.getLoginId();
-        String password = signInDto.getPassword();
-
-        log.info("로그인 아이디 : {}", loginId);
-        log.info("로그인 비밀번호 : {}", password);
-
-        JwtToken jwtToken = memberService.signIn(signInDto);
-        log.info("request username = {}, password = {}", loginId, password);
-        log.info("jwtToken accessToken = {}, refreshToken = {}", jwtToken.getAccessToken(), jwtToken.getRefreshToken());
-        return jwtToken;
-    }
-
-    @PostMapping("/sign-up")
-    public ResponseEntity<String> signUp(@RequestBody SignUpDto signUpDto) {
-        try {
-            memberService.signUp(signUpDto);
-            return ResponseEntity.ok("회원가입이 완료되었습니다.");
-        } catch (IllegalArgumentException e) {
-            log.error("회원가입 실패: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("회원가입 실패: " + e.getMessage());
-        } catch (Exception e) {
-            log.error("서버 오류: {}", e.getMessage());
-            return ResponseEntity.status(500).body("서버 오류로 인해 회원가입에 실패했습니다.");
+    // 아이디 중복 확인
+    @GetMapping("/check-id")
+    @Operation(summary = "아이디 중복 확인", description = "회원가입 시, 유저가 입력한 아이디가 중복되는지 확인합니다.")
+    public ResponseEntity<Boolean> checkId(@RequestParam @NotBlank(message = "아이디를 입력해주세요.") String loginId) {
+        if (memberService.checkId(loginId)) {
+            return ResponseEntity.ok(false);
         }
+        return ResponseEntity.ok(true);
     }
 
-    @PostMapping("/test")
-    public String test() {
-        return "success";
+    //닉네임 중복 확인
+    @GetMapping("/check-nick")
+    @Operation(summary = "닉네임 중복 확인", description = "회원가입 시, 유저가 입력한 닉네임이 중복되는지 확인합니다.")
+    public ResponseEntity<Boolean> checkNick(@RequestParam @NotBlank(message = "닉네임을 입력해주세요.") String nickName) {
+        if (memberService.checkNick(nickName)) {
+            return ResponseEntity.ok(false);
+        }
+        return ResponseEntity.ok(true);
     }
 
+    // 회원가입
+    @PostMapping("/sign-up")
+    @Operation(summary = "유저 회원가입", description = "유저 정보를 입력받아 회원가입을 진행합니다.")
+    public ResponseEntity<String> signUp(@RequestBody @Validated(ValidationSequence.class) SignUpDto signUpDto) {
+        memberService.signUp(signUpDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("회원가입이 완료되었습니다.");
+    }
+
+    // 일반 유저 로그인
+    @PostMapping("/sign-in")
+    @Operation(summary = "일반 유저 로그인", description = "일반 유저의 로그인을 진행합니다.")
+    public ResponseEntity<String> signIn(@RequestBody @Valid SignInDto signInDto, HttpServletResponse response) {
+        memberService.signIn(signInDto, response);
+        return ResponseEntity.ok("로그인 성공");
+    }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    @Operation(summary = "유저 로그아웃", description = "유저의 로그아웃을 진행합니다. 동시에 JwtToken의 AccessToken과 RefreshToken을 모두 폐기합니다.")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        memberService.logout(request, response);
+        return ResponseEntity.ok("로그아웃 완료");
+    }
+
+    // 로그인 상태 확인 API
+    @GetMapping("/me")
+    @Operation(summary = "로그인 상태 확인", description = "현재 로그인한 사용자의 정보를 반환합니다.")
+    public ResponseEntity<String> getCurrentUser(HttpServletRequest request) {
+        log.info("getCurrentUser 실행");
+        memberService.getCurrentUser(request);
+        return ResponseEntity.ok("로그인 상태 유지 중");
+    }
+
+    // Refresh Token으로 Access Token 재발급
+    @PostMapping("/refresh-token")
+    @Operation(summary = "refresh Token 재발급",
+            description = "access Token이 만료됐을 시, refresh Token의 유효기간을 확인한 후 유효하다면 access Token을 재발급합니다.")
+    public ResponseEntity<String> refreshAccessToken(HttpServletRequest request, HttpServletResponse response) {
+        memberService.refreshAccessToken(request, response);
+        return ResponseEntity.ok("새로운 Access Token 발급 완료");
+    }
 }

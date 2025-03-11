@@ -10,37 +10,38 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+// 회원 정보를 다룰 DTO 클래스
 public class MemberDto {
 
-    private Long id;
+    private Long id; // 회원 고유 ID
 
-    private String loginId;
+    private String loginId; // 로그인 아이디
 
-    private String password;
+    private String password; // 비밀번호
 
-    private String name;
+    private String name; // 이름
 
-    private String nickName;
+    private String nickName; // 닉네임
 
-    private LocalDate birth;
+    private LocalDate birth; // 생년월일
 
-    private String phone;
+    private String phone; // 전화번호
 
-    private String email;
+    private String email; // 이메일 (소셜 및 일반 로그인 공통)
 
     private String address; // 도로명 주소
 
-    private String detailAddress;
+    private String detailAddress; // 상세 주소
 
-    private List<String> roles;
+    private List<String> roles; // 역할 (USER, ADMIN)
 
-    private String status;
+    private String status; // 회원 상태 (ACTIVE, DORMANT, BANNED, DELETED)
 
-    private LocalDateTime registrationDate;
+    private LocalDateTime registrationDate; // 가입 날짜
 
-    private LocalDateTime lastModified;
+    private LocalDateTime lastModified; // 마지막 수정 날짜
 
-    // 회원가입 후 이름, 닉네임, 가입일자를 유저에게 보여줌
+    // 회원가입 후 이름, 닉네임, 가입일자만 포함된 DTO 반환
     static public MemberDto toDtoForSignUp(Member member) {
         return MemberDto.builder()
                 .name(member.getName())
@@ -48,20 +49,4 @@ public class MemberDto {
                 .registrationDate(member.getRegistrationDate())
                 .build();
     }
-
-//    public Member toEntity() {
-//        return Member.builder()
-//                .id(id)
-//                .loginId(loginId)
-//                .name(name)
-//                .nickName(nickName)
-//                .birth(birth)
-//                .phone(phone)
-//                .email(email)
-//                .address(address)
-//                .detailAddress(detailAddress)
-//                .status(status)
-//                .registrationDate(registrationDate)
-//                .lastModified(lastModified);
-//    }
 }

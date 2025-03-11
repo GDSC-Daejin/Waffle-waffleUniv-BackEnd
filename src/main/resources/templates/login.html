@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login and Signup</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
 </head>
 <body>
 <form id="loginForm">
@@ -17,7 +20,25 @@
     <button type="button" onclick="window.location.href='/members/sign-up'">회원가입</button>
 </form>
 
+<!-- 소셜 로그인 -->
+<div>
+    <h3>소셜 로그인</h3>
+    <button id="googleSignInButton" onclick="redirectToSocialLogin()">Sign in with Google</button>
+</div>
+
 <script>
+    // Firebase 설정
+    const firebaseConfig = {
+        apiKey: "AIzaSyD435k195AzgG1OTZ1xnEt-31gsmqY7rBk",
+        authDomain: "waffle-univ.firebaseapp.com",
+        projectId: "waffle-univ",
+        storageBucket: "waffle-univ.firebasestorage.app",
+        messagingSenderId: "281963831825",
+        appId: "1:281963831825:web:db1f1bddd2b840520787b0",
+        measurementId: "G-N83W2CXQ5J"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     async function login() {
         const formData = {
             loginId: document.getElementById("loginId").value,
@@ -25,18 +46,16 @@
         };
 
         try {
-            const response = await fetch('/members/sign-in', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/members/sign-in", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
+                credentials: "include"  // ✅ 쿠키 자동 포함
             });
 
             if (response.ok) {
-                const jwtToken = await response.json(); // 서버에서 JwtToken 객체를 JSON으로 받아옴
-                localStorage.setItem('accessToken', jwtToken.accessToken); // accessToken 저장
-                localStorage.setItem('refreshToken', jwtToken.refreshToken); // refreshToken 저장
-                alert("로그인 성공!(테스트용 알림)");
-                window.location.href = "/members/home"; // 홈 화면으로 이동
+                alert("로그인 성공!");
+                window.location.href = "/members/home";
             } else {
                 const errorText = await response.text();
                 alert("로그인 실패: " + errorText);
@@ -45,6 +64,38 @@
             console.error("오류 발생:", error);
             alert("서버와의 통신 중 오류가 발생했습니다.");
         }
+    }
+
+    // Google 소셜 로그인
+    document.getElementById("googleSignInButton").addEventListener("click", () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        auth.signInWithPopup(provider)
+            .then((result) => result.user.getIdToken())
+            .then((idToken) => {
+                return fetch('/members/social-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Firebase ${idToken}`
+                    },
+                    credentials: "include"  // ✅ 쿠키 자동 포함
+                });
+            })
+            .then((response) => {
+                if (response.ok) {
+                    alert("소셜 로그인 성공!");
+                    window.location.href = "/members/home";
+                } else {
+                    alert("소셜 로그인 실패!");
+                }
+            })
+            .catch((error) => console.error("소셜 로그인 오류:", error));
+    });
+
+    // 구글 로그인 버튼 클릭 시 소셜 로그인 페이지로 이동
+    function redirectToSocialLogin() {
+        window.location.href = "/auth/google";
     }
 </script>
 </body>
