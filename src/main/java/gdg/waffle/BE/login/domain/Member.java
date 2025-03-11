@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-
 @Entity
 @Table(name= "members")
 @Getter
@@ -83,7 +82,6 @@ public class Member implements UserDetails {
     private LocalDateTime lastLoginAt; // 마지막 접속 날짜
 
     // Spring Security의 UserDetails 구현 메서드
-
     @Override
     public String getUsername() {
         return loginId;
